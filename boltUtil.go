@@ -7,7 +7,7 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-func storeJson(db *bolt.DB, bucket string, key string, data interface{}) error {
+func StoreBoltJson(db *bolt.DB, bucket string, key string, data interface{}) error {
 	j, err := json.Marshal(data)
 	if err != nil {
 		return err
@@ -19,7 +19,7 @@ func storeJson(db *bolt.DB, bucket string, key string, data interface{}) error {
 	})
 }
 
-func lookupJson(db *bolt.DB, bucket string, key string, v interface{}) error {
+func LookupBoltJson(db *bolt.DB, bucket string, key string, v interface{}) error {
 	return db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		data := b.Get([]byte(key))
@@ -30,7 +30,7 @@ func lookupJson(db *bolt.DB, bucket string, key string, v interface{}) error {
 	})
 }
 
-func ensureBucketExists(db *bolt.DB, bucket string) error {
+func EnsureBoltBucketExists(db *bolt.DB, bucket string) error {
 	return db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte(bucket))
 		if err != nil {

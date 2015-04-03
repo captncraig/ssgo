@@ -1,4 +1,4 @@
-package ssgo
+package hub
 
 import (
 	"fmt"
@@ -10,7 +10,8 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
-	"github.com/google/go-github/github"
+	"github.com/captncraig/ssgo"
+	ghApi "github.com/google/go-github/github"
 )
 
 type GithubAuthenticatedHandler func(w http.ResponseWriter, r *http.Request, user *GithubUser)
@@ -46,7 +47,7 @@ func NewGithubSSO(clientId, clientSecret, scopes string) (GithubSSO, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = ensureBucketExists(db, ghAuthBucketName); err != nil {
+	if err = ssgo.EnsureBoltBucketExists(db, ghAuthBucketName); err != nil {
 		return nil, err
 	}
 	return &githubSSO{
@@ -60,7 +61,7 @@ func NewGithubSSO(clientId, clientSecret, scopes string) (GithubSSO, error) {
 var ghStates = map[string]time.Time{}
 
 func (g *githubSSO) RedirectToLogin(w http.ResponseWriter, r *http.Request) {
-	state := randSeq(10)
+	state := ssgo.RandSeq(10)
 	ghStates[state] = time.Now()
 	url := fmt.Sprintf("https://github.com/login/oauth/authorize?client_id=%s&scope=%s&state=%s", g.clientId, g.requiredScopes, state)
 	http.Redirect(w, r, url, 302)
@@ -99,9 +100,9 @@ func (g *githubSSO) ExchangeCodeForToken(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	accessToken := string(body[eq+1 : amp])
-	cookieVal := randSeq(25)
+	cookieVal := ssgo.RandSeq(25)
 
-	gh := github.NewClient(GithubApiClient(accessToken))
+	gh := ghApi.NewClient(githubApiClient(accessToken))
 	u, _, err := gh.Users.Get("")
 	if err != nil {
 		w.WriteHeader(500)
@@ -120,7 +121,7 @@ func (g *githubSSO) LookupUser(r *http.Request) *GithubUser {
 		return nil
 	}
 	user := &GithubUser{}
-	err = lookupJson(g.db, ghAuthBucketName, cookie.Value, user)
+	err = ssgo.LookupBoltJson(g.db, ghAuthBucketName, cookie.Value, user)
 	if err != nil {
 		return nil
 	}
@@ -128,7 +129,7 @@ func (g *githubSSO) LookupUser(r *http.Request) *GithubUser {
 }
 
 func (g *githubSSO) storeGithubToken(cookie, token, username, avatar string) error {
-	return storeJson(g.db, ghAuthBucketName, cookie, &GithubUser{username, token, avatar})
+	return ssgo.StoreBoltJson(g.db, ghAuthBucketName, cookie, &GithubUser{username, token, avatar})
 }
 
 func (g *githubSSO) Route(loggedOut http.HandlerFunc, loggedIn GithubAuthenticatedHandler) http.HandlerFunc {
@@ -157,6 +158,10 @@ func (g *ghClient) RoundTrip(r *http.Request) (*http.Response, error) {
 }
 
 // Creates an http.Client that can be used to make authenticated requests to the github api
-func GithubApiClient(token string) *http.Client {
-	return &http.Client{Transport: &ghClient{token}}
+func (u *GithubUser) GithubApiClient() *http.Client {
+	return githubApiClient(u.AccessToken)
+}
+
+func githubApiClient(accessToken string) *http.Client {
+	return &http.Client{Transport: &ghClient{accessToken}}
 }
