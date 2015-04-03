@@ -26,3 +26,5 @@ Use the `Route` helper to direct traffic based on a user's cookie value:
     http.HandleFunc("/", gh.Route(loggedOut, loggedIn))
     
 The appropriate handler will be invoked for requests, and if the user is logged in to github, you will receive a populated `GithubUser` struct to your loggedIn handler.
+
+See [this example](https://github.com/captncraig/ssgo/blob/master/examples/github/main.go) for full working code.
