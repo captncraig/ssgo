@@ -11,6 +11,8 @@ This package aims to make it easy to build web applications in Go that use exter
 
 # Super easy github integration:
 
+`import "github.com/captncraig/ssgo/hub"`
+
 Make an sso object:
 
     cid, secret := os.Getenv("GH_CLIENT_ID"),os.Getenv("GH_CLIENT_SECRET")
