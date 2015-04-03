@@ -32,3 +32,8 @@ The appropriate handler will be invoked for requests, and if the user is logged 
 `user.GithubApiClient()` will give you an `http.Client` that you can use with [go-github](https://github.com/google/go-github) to make authenticated requests for that user.
 
 See [this example](https://github.com/captncraig/ssgo/blob/master/examples/github/main.go) for full working code.
+
+## how it works:
+Internally we store a randomly generated `authToken` cookie in the browser, which is a key into a boltDb database that stores the accessToken and some basic account info. You can control the db file name with the `ssgo.boltdb` environment variable if you so choose.
+
+
