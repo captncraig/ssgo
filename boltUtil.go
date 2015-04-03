@@ -3,11 +3,27 @@ package ssgo
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"time"
 
 	"github.com/boltdb/bolt"
 )
 
-func StoreBoltJson(db *bolt.DB, bucket string, key string, data interface{}) error {
+var db *bolt.DB
+
+func init() {
+	boltPath := os.Getenv("ssgo.boltdb")
+	if boltPath == "" {
+		boltPath = "ssgo.db"
+	}
+	var err error
+	db, err = bolt.Open(boltPath, 0600, &bolt.Options{Timeout: 2 * time.Second})
+	if err != nil {
+		panic(err.Error())
+	}
+}
+
+func StoreBoltJson(bucket string, key string, data interface{}) error {
 	j, err := json.Marshal(data)
 	if err != nil {
 		return err
@@ -19,7 +35,7 @@ func StoreBoltJson(db *bolt.DB, bucket string, key string, data interface{}) err
 	})
 }
 
-func LookupBoltJson(db *bolt.DB, bucket string, key string, v interface{}) error {
+func LookupBoltJson(bucket string, key string, v interface{}) error {
 	return db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		data := b.Get([]byte(key))
@@ -30,7 +46,7 @@ func LookupBoltJson(db *bolt.DB, bucket string, key string, v interface{}) error
 	})
 }
 
-func EnsureBoltBucketExists(db *bolt.DB, bucket string) error {
+func EnsureBoltBucketExists(bucket string) error {
 	return db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte(bucket))
 		if err != nil {

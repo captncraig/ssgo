@@ -13,7 +13,7 @@ import (
 var gh hub.GithubSSO
 
 func main() {
-	gh, _ = hub.NewGithubSSO(os.Getenv("GH_CLIENT_ID"), os.Getenv("GH_CLIENT_SECRET"), "public_repo,write:repo_hook")
+	gh = hub.NewGithubSSO(os.Getenv("GH_CLIENT_ID"), os.Getenv("GH_CLIENT_SECRET"), "public_repo,write:repo_hook")
 	http.HandleFunc("/login", gh.RedirectToLogin)
 	http.HandleFunc("/ghauth", gh.ExchangeCodeForToken)
 	http.HandleFunc("/", gh.Route(loggedOut, loggedIn))

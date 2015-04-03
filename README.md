@@ -26,7 +26,7 @@ This package aims to make it easy to build web applications in Go that use exter
     var gh ssgo.GithubSSO
     
     func main() {
-    	gh, _ = ssgo.NewGithubSSO(os.Getenv("GH_CLIENT_ID"), os.Getenv("GH_CLIENT_SECRET"), "public_repo,write:repo_hook")
+    	gh = ssgo.NewGithubSSO(os.Getenv("GH_CLIENT_ID"), os.Getenv("GH_CLIENT_SECRET"), "public_repo,write:repo_hook")
     	http.HandleFunc("/login", gh.RedirectToLogin)
     	http.HandleFunc("/ghauth", gh.ExchangeCodeForToken)
     	http.HandleFunc("/", gh.Route(loggedOut, loggedIn))

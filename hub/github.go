@@ -5,11 +5,9 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
-	"github.com/boltdb/bolt"
 	"github.com/captncraig/ssgo"
 	ghApi "github.com/google/go-github/github"
 )
@@ -33,29 +31,22 @@ type GithubSSO interface {
 type githubSSO struct {
 	clientId, clientSecret string
 	requiredScopes         string
-	db                     *bolt.DB
 }
 
 const ghAuthBucketName = "ghAuth"
 
-func NewGithubSSO(clientId, clientSecret, scopes string) (GithubSSO, error) {
-	boltPath := os.Getenv("ssgo.boltdb")
-	if boltPath == "" {
-		boltPath = "ssgo.db"
+func init() {
+	if err := ssgo.EnsureBoltBucketExists(ghAuthBucketName); err != nil {
+		panic(err)
 	}
-	db, err := bolt.Open(boltPath, 0600, &bolt.Options{Timeout: 2 * time.Second})
-	if err != nil {
-		return nil, err
-	}
-	if err = ssgo.EnsureBoltBucketExists(db, ghAuthBucketName); err != nil {
-		return nil, err
-	}
+}
+
+func NewGithubSSO(clientId, clientSecret, scopes string) GithubSSO {
 	return &githubSSO{
 		clientId:       clientId,
 		clientSecret:   clientSecret,
 		requiredScopes: scopes,
-		db:             db,
-	}, nil
+	}
 }
 
 var ghStates = map[string]time.Time{}
@@ -111,17 +102,17 @@ func (g *githubSSO) ExchangeCodeForToken(w http.ResponseWriter, r *http.Request)
 	uname := *u.Login
 	avatar := *u.AvatarURL
 	g.storeGithubToken(cookieVal, accessToken, uname, avatar)
-	http.SetCookie(w, &http.Cookie{Name: "authToken", Value: cookieVal, Expires: time.Now().Add(90 * 24 * time.Hour)})
+	http.SetCookie(w, &http.Cookie{Name: "ghAuthToken", Value: cookieVal, Expires: time.Now().Add(90 * 24 * time.Hour)})
 	http.Redirect(w, r, "/", 302)
 }
 
 func (g *githubSSO) LookupUser(r *http.Request) *GithubUser {
-	cookie, err := r.Cookie("authToken")
+	cookie, err := r.Cookie("ghAuthToken")
 	if err != nil {
 		return nil
 	}
 	user := &GithubUser{}
-	err = ssgo.LookupBoltJson(g.db, ghAuthBucketName, cookie.Value, user)
+	err = ssgo.LookupBoltJson(ghAuthBucketName, cookie.Value, user)
 	if err != nil {
 		return nil
 	}
@@ -129,7 +120,7 @@ func (g *githubSSO) LookupUser(r *http.Request) *GithubUser {
 }
 
 func (g *githubSSO) storeGithubToken(cookie, token, username, avatar string) error {
-	return ssgo.StoreBoltJson(g.db, ghAuthBucketName, cookie, &GithubUser{username, token, avatar})
+	return ssgo.StoreBoltJson(ghAuthBucketName, cookie, &GithubUser{username, token, avatar})
 }
 
 func (g *githubSSO) Route(loggedOut http.HandlerFunc, loggedIn GithubAuthenticatedHandler) http.HandlerFunc {
