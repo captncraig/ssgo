@@ -13,7 +13,8 @@ This package aims to make it easy to build web applications in Go that use exter
 
 Make an sso object:
 
-    gh, _ = hub.NewGithubSSO(os.Getenv("GH_CLIENT_ID"), 
+    gh, _ = hub.NewGithubSSO(
+       os.Getenv("GH_CLIENT_ID"), 
        os.Getenv("GH_CLIENT_SECRET"),
        "public_repo,write:repo_hook")`
 
