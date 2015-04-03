@@ -8,6 +8,9 @@ This package aims to make it easy to build web applications in Go that use exter
 ## Planned integrations:
 - **reddit**
 - **imgur**
+- **twitter**
+- **facebook**
+- **google**
 
 # Super easy github integration:
 
