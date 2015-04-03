@@ -55,3 +55,7 @@ func EnsureBoltBucketExists(bucket string) error {
 		return nil
 	})
 }
+
+func GetDb() *bolt.DB {
+	return db
+}
