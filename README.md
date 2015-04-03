@@ -33,7 +33,7 @@ The appropriate handler will be invoked for requests, and if the user is logged 
 
 See [this example](https://github.com/captncraig/ssgo/blob/master/examples/github/main.go) for full working code.
 
-## how it works:
+## internals:
 Internally we store a randomly generated `authToken` cookie in the browser, which is a key into a boltDb database that stores the accessToken and some basic account info. You can control the db file name with the `ssgo.boltdb` environment variable if you so choose.
 
 If your application wants to use the same bolt db as the sso system, you can use the helpers in the ssgo package to load or store json to your own bucket.
