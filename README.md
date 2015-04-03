@@ -29,6 +29,6 @@ Use the `Route` helper to direct traffic based on a user's cookie value:
     
 The appropriate handler will be invoked for requests, and if the user is logged in to github, you will receive a populated `GithubUser` struct to your loggedIn handler.
 
-`user.GithubApiClient()` will give you an `http.Client` that you can use with [go-github](http://github.com/google/go-github/github) to make authenticated requests for that user.
+`user.GithubApiClient()` will give you an `http.Client` that you can use with [go-github](https://github.com/google/go-github) to make authenticated requests for that user.
 
 See [this example](https://github.com/captncraig/ssgo/blob/master/examples/github/main.go) for full working code.
