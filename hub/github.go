@@ -59,7 +59,6 @@ func (g *githubSSO) RedirectToLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *githubSSO) ExchangeCodeForToken(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("callback!")
 	state := r.URL.Query().Get("state")
 	if _, ok := ghStates[state]; state == "" || !ok {
 		w.WriteHeader(401)
