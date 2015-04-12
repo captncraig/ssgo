@@ -101,7 +101,7 @@ func (g *githubSSO) ExchangeCodeForToken(w http.ResponseWriter, r *http.Request)
 	uname := *u.Login
 	avatar := *u.AvatarURL
 	g.storeGithubToken(cookieVal, accessToken, uname, avatar)
-	http.SetCookie(w, &http.Cookie{Name: "ghAuthToken", Value: cookieVal, Expires: time.Now().Add(90 * 24 * time.Hour)})
+	http.SetCookie(w, &http.Cookie{Name: "ghAuthToken", Path: "/", Value: cookieVal, Expires: time.Now().Add(90 * 24 * time.Hour)})
 	http.Redirect(w, r, "/", 302)
 }
 
