@@ -10,13 +10,20 @@ import (
 	"golang.org/x/oauth2/github"
 )
 
+//Like an http.HandleFunc, but accepts a credentials object as a third argument.
 type AuthenticatedHandler func(w http.ResponseWriter, r *http.Request, credentials *Credentials)
 
+//Core interface for working with a third-party website
 type SSO interface {
+	//Redirect the request to the provider's authorization page
 	RedirectToLogin(w http.ResponseWriter, r *http.Request)
+	//Handle callback from authorization page. This needs to be hosted at the url that is registered with the provider.
 	ExchangeCodeForToken(w http.ResponseWriter, r *http.Request)
+	//Lookup the credentials for a given request from the cookie. Will return nil if no valid cookie is found.
 	LookupToken(r *http.Request) *Credentials
+	//Basic http handler that looks up the token for you and provides credentials to your handler. Credentials may be nil.
 	Handle(handler AuthenticatedHandler) http.HandlerFunc
+	//Select a handler based on whether the user has a valid cookie or not.
 	Route(loggedOut http.HandlerFunc, loggedIn AuthenticatedHandler) http.HandlerFunc
 }
 
@@ -27,9 +34,13 @@ type sso struct {
 	authOpts []oauth2.AuthCodeOption
 }
 
+//Container for a user's oauth credentials
 type Credentials struct {
-	Site   string
-	Token  *oauth2.Token
+	// Shortname of site they are authenticated with
+	Site string
+	// Oauth token for user.
+	Token *oauth2.Token
+	// Http client with oauth credentials ready to go.
 	Client *http.Client
 }
 
@@ -90,6 +101,7 @@ func (s *sso) ExchangeCodeForToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tok, err := s.conf.Exchange(oauth2.NoContext, code)
+
 	if err != nil {
 		return
 	}
@@ -108,9 +120,10 @@ func (s *sso) LookupToken(r *http.Request) *Credentials {
 	}
 	tok := oauth2.Token{}
 	err = LookupBoltJson(s.bucketName(), cookie.Value, &tok)
-	if err != nil {
+	if err != nil || tok.AccessToken == "" {
 		return nil
 	}
+
 	return &Credentials{
 		Site:   s.site,
 		Token:  &tok,

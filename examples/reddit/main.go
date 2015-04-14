@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -24,13 +25,16 @@ func loggedOut(w http.ResponseWriter, r *http.Request) {
 }
 
 func loggedIn(w http.ResponseWriter, r *http.Request, c *ssgo.Credentials) {
+	fmt.Println(c.Token.RefreshToken)
 	resp, err := c.Client.Get("https://oauth.reddit.com/api/v1/me")
 	if err != nil {
 		io.WriteString(w, err.Error())
+		return
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		io.WriteString(w, err.Error())
+		return
 	}
 	io.WriteString(w, string(body))
 }
