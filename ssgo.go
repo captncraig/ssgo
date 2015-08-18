@@ -25,6 +25,8 @@ type SSO interface {
 	Handle(handler AuthenticatedHandler) http.HandlerFunc
 	//Select a handler based on whether the user has a valid cookie or not.
 	Route(loggedOut http.HandlerFunc, loggedIn AuthenticatedHandler) http.HandlerFunc
+
+	ClearCookie(w http.ResponseWriter)
 }
 
 type sso struct {
@@ -111,6 +113,11 @@ func (s *sso) ExchangeCodeForToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.SetCookie(w, &http.Cookie{Name: s.cookieName(), Value: cookieVal, Path: "/", Expires: time.Now().Add(90 * 24 * time.Hour)})
+}
+
+func (s *sso) ClearCookie(w http.ResponseWriter) {
+	c := &http.Cookie{Name: s.cookieName(), Value: "", Path: "/", Expires: time.Now().Add(-1 * time.Hour), MaxAge: -1}
+	http.SetCookie(w, c)
 }
 
 func (s *sso) LookupToken(r *http.Request) *Credentials {
