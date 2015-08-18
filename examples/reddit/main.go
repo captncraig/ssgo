@@ -10,7 +10,7 @@ import (
 	"github.com/captncraig/ssgo"
 )
 
-var sso = ssgo.NewReddit(os.Getenv("REDDIT_ID"), os.Getenv("REDDIT_SECRET"), os.Getenv("REDDIT_REDIRECT"p), "identity")
+var sso = ssgo.NewReddit(os.Getenv("REDDIT_ID"), os.Getenv("REDDIT_SECRET"), os.Getenv("REDDIT_REDIRECT"), "identity")
 
 func main() {
 	http.HandleFunc("/login", sso.RedirectToLogin)
